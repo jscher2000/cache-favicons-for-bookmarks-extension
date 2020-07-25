@@ -1,0 +1,28 @@
+body {
+	color: #f2f2f2;
+	background-color: #555;
+	min-width: 350px;
+	margin: 8px;
+	font-size: 16px;
+}
+h1 {
+	font-size: 1.2em;
+	margin: 0;
+	padding: 4px 8px;
+	background: #22f;
+	text-align: center;
+}
+ol {
+	padding-left: 16px;
+}
+#controls {
+	border: 3px solid #22f;
+	padding: 0 16px;
+	background-color: #333;
+}
+#err {
+	color: #f00;
+}
+button {
+	font-size: 16px;
+}
