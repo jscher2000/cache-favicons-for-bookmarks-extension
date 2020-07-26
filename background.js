@@ -1,6 +1,7 @@
 /* 
-  Copyright 2019. Jefferson "jscher2000" Scher. License: MPL-2.0.
+  Copyright 2020. Jefferson "jscher2000" Scher. License: MPL-2.0.
   v0.5 - initial design
+  v0.6 - on/off switch
 */
 
 /**** Retrieve Preferences From Storage and Set Up Listener ****/
@@ -25,15 +26,26 @@ function updatePref(){
 }
 updatePref();
 
-// Create response listener for images
-browser.webRequest.onHeadersReceived.addListener(
-	fixCC,
-	{
-		urls: ["<all_urls>"],
-		types: ["image"]
-	},
-	["blocking", "responseHeaders"]
-);
+// Create response listener for images and initialize to "on"
+let nowListening = false;
+function startListening(){
+	browser.webRequest.onHeadersReceived.addListener(
+		fixCC,
+		{
+			urls: ["<all_urls>"],
+			types: ["image"]
+		},
+		["blocking", "responseHeaders"]
+	);
+	nowListening = true;
+	return nowListening;
+}
+function stopListening(){
+	browser.webRequest.onHeadersReceived.removeListener(fixCC);
+	nowListening = false;
+	return nowListening;
+}
+startListening();
 
 /**** Fix Headers of Intercepted Responses ****/
 
@@ -66,7 +78,7 @@ function fixCC(details) {
 /**** Handle Messages from Popup/Options ****/
 
 function handleMessage(request, sender, sendResponse) {
-	if ("newURLs" in request) { // from popup
+	if ('newURLs' in request) { // from popup
 		var savechg = false;
 		for (var i=0; i<request.newURLs.length; i++){
 			if (!oPrefs.imageURLs.includes(request.newURLs[i])){
@@ -79,8 +91,7 @@ function handleMessage(request, sender, sendResponse) {
 			browser.storage.local.set(
 				{userprefs: oPrefs}
 			).catch((err) => {
-				document.getElementById('oops').textContent = 'Error updating storage: ' + err.message;
-				document.getElementById('oops').style.display = 'block';
+				console.log('Error updating storage: ' + err.message);
 			});
 		}
 		// Reload the page
@@ -90,6 +101,24 @@ function handleMessage(request, sender, sendResponse) {
 			browser.tabs.reload(arrTabs[0].id);
 		}).catch((err) => {
 			console.log('Failed: ' + err.message);
+		});
+	} else if ('toggle' in request) {
+		if (request.toggle == false) {
+			// Remove listener
+			stopListening();
+			sendResponse({
+				status: nowListening
+			});
+		} else if (request.toggle == true) {
+			// Enable listener
+			startListening();
+			sendResponse({
+				status: nowListening
+			});
+		}
+	} else if ('status' in request) {
+		sendResponse({
+			status: nowListening
 		});
 	}
 }

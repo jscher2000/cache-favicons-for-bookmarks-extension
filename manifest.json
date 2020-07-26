@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Cache Favicons for Bookmarks",
 	"description": "Allow Firefox to save \"no-store\" site icons and get rid of the globe.",
-	"version": "0.5",
+	"version": "0.6",
 	"applications":{
 		"gecko": {
 			"id": "cache-favicons@jeffersonscher.com",

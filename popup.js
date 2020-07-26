@@ -1,7 +1,20 @@
 /* 
   Copyright 2020. Jefferson "jscher2000" Scher. License: MPL-2.0.
   v0.5 - initial concept
+  v0.6 - on/off switch
 */
+
+/*** Get listener status and update button ****/
+var nowListening = false;
+browser.runtime.sendMessage({
+	status: ''
+}).then((response) => {
+	nowListening = response.status;
+	if (nowListening == true) document.getElementById('toggle').src = 'icons/on-status.png';
+	else document.getElementById('toggle').src = 'icons/off-status.png';
+}).catch((err) => {
+	document.getElementById('errs').textContent = 'Problem getting status: ' + err.message;
+});
 
 /**** Get a list of site icon(s) from the page and populate the popup ****/
 
@@ -17,7 +30,7 @@ function onExecuted(result) {
 			newLI.textContent = arrURLs[i];
 			document.getElementById('iconlist').appendChild(newLI);
 		}
-		document.getElementById('btnGo').removeAttribute('disabled');
+		if (nowListening) document.getElementById('btnGo').removeAttribute('disabled');
 	}
 }
 function onError(error) {
@@ -40,6 +53,7 @@ const executing = browser.tabs.executeScript({
 });
 executing.then(onExecuted, onError);
 
+
 /**** Event handlers ****/
 
 document.getElementById('btnGo').addEventListener('click', function(evt){
@@ -49,7 +63,7 @@ document.getElementById('btnGo').addEventListener('click', function(evt){
 	).then(function(){
 		self.close();
 	}).catch((err) => {
-		document.getElementById('err').textContent = 'Error setting up for reload: ' + err.message;
+		document.getElementById('errs').textContent = 'Error setting up for reload: ' + err.message;
 	});
 }, false);
 
@@ -57,4 +71,20 @@ document.getElementById('btnCancel').addEventListener('click', function(evt){
 	self.close();
 }, false);
 
-
+document.getElementById('toggle').addEventListener('click', function(evt){
+	// Send status change to background, then update button
+	nowListening = !nowListening;
+	browser.runtime.sendMessage(
+		{ toggle: nowListening }
+	).then((response) => {
+		if (nowListening == true){
+			document.getElementById('toggle').src = 'icons/on-status.png';
+			if (document.getElementById('iconlist').children.length > 0) document.getElementById('btnGo').removeAttribute('disabled');
+		} else{
+			document.getElementById('toggle').src = 'icons/off-status.png';
+			document.getElementById('btnGo').setAttribute('disabled', 'disabled');
+		}
+	}).catch((err) => {
+		document.getElementById('errs').textContent = 'Error setting up for reload: ' + err.message;
+	});
+}, false);
